@@ -1,23 +1,38 @@
-#include "get_token.cpp"
+#include "include/get_token.h"
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <unordered_map>
+#include <utility>
 
-int walkDirectory(std::string &path,
-                  std::unordered_map<std::string, int> &freq) {
-  int totalCount = 0;
+std::pair<int, int> walkDirectory(std::string &path,
+                                  std::unordered_map<std::string, int> &spam,
+                                  std::unordered_map<std::string, int> &ham) {
+  int ham_count = 0;
+  int spam_count = 0;
+  int max_files = 15000;
+  int file_seen = 0;
+  bool is_ham = false;
   for (auto &entry : std::filesystem::recursive_directory_iterator(path)) {
-    if (std::filesystem::is_regular_file(entry)) {
-      std::ifstream file(entry.path(), std::ios::binary);
+    if (file_seen > max_files)
+      break;
+    if (entry.is_regular_file()) {
+      std::filesystem::path p(entry.path().string());
+      std::ifstream file(entry.path());
       if (file) {
-        totalCount += get_token(file, freq);
+        file_seen++;
+        std::cout << "trained file: " << entry.path().string() << std::endl;
+        if (p.parent_path().filename().string() == "ham") {
+          ham_count += get_token(file, ham);
+        } else if (p.parent_path().filename().string() == "spam") {
+          spam_count += get_token(file, spam);
+        }
       }
-    } else if (std::filesystem::is_directory(entry)) {
-
-      std::cout << "Read directory: " << entry.path() << std::endl;
+    } else if (entry.is_directory()) {
+      std::cout << "Reading foler: " << entry.path().string() << std::endl;
     }
   }
 
-  return totalCount;
+  auto counts = std::make_pair(ham_count, spam_count);
+
+  return counts;
 }
