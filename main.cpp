@@ -37,10 +37,14 @@ calculate_score(std::unordered_map<std::string, int> &doc_freq,
 
 int main() {
 
+  std::ios::sync_with_stdio(false);
+  std::cin.tie(nullptr);
+
   std::unordered_map<std::string, int> ham_freq;
   std::unordered_map<std::string, int> spam_freq;
 
   auto counts = walkDirectory(training_root, spam_freq, ham_freq);
+  std::cout << "Finished Training data" << std::endl;
 
   int ham_total = counts.first;
   int spam_total = counts.second;

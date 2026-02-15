@@ -7,26 +7,25 @@
 std::pair<int, int> walkDirectory(std::string &path,
                                   std::unordered_map<std::string, int> &spam,
                                   std::unordered_map<std::string, int> &ham) {
+  ham.reserve(500000);
+  spam.reserve(500000);
   int ham_count = 0;
   int spam_count = 0;
   for (auto &entry : std::filesystem::recursive_directory_iterator(path)) {
     if (entry.is_regular_file()) {
-      std::filesystem::path p(entry.path().string());
       std::ifstream file(entry.path());
-      if (file) {
-        std::cout << "trained file: " << entry.path().string() << std::endl;
-        if (p.parent_path().filename().string() == "ham") {
-          ham_count += get_token(file, ham);
-        } else if (p.parent_path().filename().string() == "spam") {
-          spam_count += get_token(file, spam);
-        }
+      if (!file)
+        continue;
+      // std::cout << "trained file: " << entry.path() << std::endl;
+      if (entry.path().parent_path().filename() == "ham") {
+        ham_count += get_token(file, ham);
+      } else if (entry.path().parent_path().filename() == "spam") {
+        spam_count += get_token(file, spam);
       }
     } else if (entry.is_directory()) {
-      std::cout << "Reading foler: " << entry.path().string() << std::endl;
+      // std::cout << "Reading foler: " << entry.path() << std::endl;
     }
   }
 
-  auto counts = std::make_pair(ham_count, spam_count);
-
-  return counts;
+  return {ham_count, spam_count};
 }
